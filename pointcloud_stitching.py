@@ -15,7 +15,7 @@ from experiments.geotransformer_3dmatch.model import create_model
 
 def make_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-path", required=True, help="path to the data folder")
+    parser.add_argument("--data-path", required=True, help="path to the data folder which contains the .ply files")
     parser.add_argument("--output-path", required=False, help="output path")
     parser.add_argument("--show", action="store_true", help="show the pointclouds")
     parser.add_argument("--gt-file", required=False, help="ground-truth transformation file")
@@ -23,29 +23,7 @@ def make_parser():
     return parser
 
 
-def load_data(args):
-    src_points = np.load(args.src_file)
-    ref_points = np.load(args.ref_file)
-    src_feats = np.ones_like(src_points[:, :1])
-    ref_feats = np.ones_like(ref_points[:, :1])
-
-    data_dict = {
-        "ref_points": ref_points.astype(np.float32),
-        "src_points": src_points.astype(np.float32),
-        "ref_feats": ref_feats.astype(np.float32),
-        "src_feats": src_feats.astype(np.float32),
-    }
-
-    if args.gt_file is not None:
-        transform = np.load(args.gt_file)
-    else:
-        transform = np.eye(4)  # 4x4 identity matrix
-
-    data_dict["transform"] = transform.astype(np.float32)
-
-    return data_dict
-
-def load_data_it(src_path, ref_path, args):
+def load_data(src_path, ref_path, args):
     src_points = np.load(src_path)
     ref_points = np.load(ref_path)
     src_feats = np.ones_like(src_points[:, :1])
@@ -67,18 +45,49 @@ def load_data_it(src_path, ref_path, args):
 
     return data_dict
 
+def downsample_pcd(pcd, voxel_size=0.025, num_points=18000):
+    # Downsample the point cloud
+    pcd = pcd.voxel_down_sample(voxel_size)
+    
+    # If the number of points is greater than num_points, randomly sample num_points points
+    if len(pcd.points) > num_points:
+        ratio = len(pcd.points) // num_points  # Keep every `ratio`-th point
+        pcd = pcd.uniform_down_sample(ratio)
+    
+    return pcd
+
+def ply2npy(ply_file, downsample=True, change_units=True):
+    pcd = o3d.io.read_point_cloud(ply_file)
+    if downsample:
+        # Downsample the point cloud
+        pcd = downsample_pcd(pcd, voxel_size=0.025, num_points=18000)
+    # Convert to numpy arrays
+    points = np.asarray(pcd.points)
+    colors = np.asarray(pcd.colors)
+    if change_units and np.mean(np.abs(points), axis=0).mean()> 1:
+        # Convert from millimeters to meters
+        points = points / 1000.0
+
+    return points, colors
+
+
 def main():
     parser = make_parser()
     args = parser.parse_args()
 
     cfg = make_cfg()
-
-    input_src = sorted([os.path.join(args.data_path, npy_file) for npy_file in os.listdir(args.data_path) if npy_file.endswith('.npy')])
+    ply_files = sorted([os.path.join(args.data_path, "ply", npy_file) for npy_file in os.listdir(os.path.join(args.data_path, "ply")) if npy_file.endswith('.ply')])
     
-    ply_files = ['./data/experiments/exp/ply/rgb_points_20250303_134004.ply',
-                 './data/experiments/exp/ply/rgb_points_20250303_134039.ply',
-                 './data/experiments/exp/ply/rgb_points_20250303_134111.ply',
-                 './data/experiments/exp/ply/rgb_points_20250303_134146.ply',]
+    os.path.join(args.data_path, "ply")
+    for ply_file in ply_files:
+        # Convert PLY to NPY
+        points, colors = ply2npy(ply_file, downsample=True, change_units=True)
+        npy_file = os.path.join(args.data_path, "npy", os.path.basename(ply_file).replace('.ply', '.npy'))
+        os.makedirs(os.path.dirname(npy_file), exist_ok=True)
+        # Save the points to NPY files
+        np.save(npy_file, points)
+
+    input_src = sorted([os.path.join(args.data_path, "npy", npy_file) for npy_file in os.listdir(os.path.join(args.data_path, "npy"))  if npy_file.endswith('.npy')])
     
     estimated_transform_list = []
     ref_points_list = []
@@ -98,7 +107,7 @@ def main():
 
     for i in range(len(input_src)-1):
         # prepare data
-        data_dict = load_data_it(input_src[i], input_src[i+1], args)
+        data_dict = load_data(input_src[i], input_src[i+1], args)
         neighbor_limits = [38, 36, 36, 38]  # default setting in 3DMatch
         data_dict = registration_collate_fn_stack_mode(
             [data_dict], cfg.backbone.num_stages, cfg.backbone.init_voxel_size, cfg.backbone.init_radius, neighbor_limits
@@ -164,13 +173,14 @@ def main():
         stitched_rgb_pcd += ref_rgb_pcd
         stitched_rgb_pcd += src_rgb_pcd
     
-    draw_geometries(*point_clouds)
+    #draw_geometries(*point_clouds)
 
     # Visualize the final stitched point cloud
     o3d.visualization.draw_geometries([stitched_pcd])
     o3d.visualization.draw_geometries([stitched_rgb_pcd])
 
-    o3d.io.write_point_cloud("./data/ply/exp/stitched.ply", stitched_pcd)
+    output_path = os.path.join(args.data_path, "ply", "stitched.ply")
+    o3d.io.write_point_cloud(output_path, stitched_pcd)
     print("Final stitched point cloud saved as 'stitched.ply'")
     
     # Compute error
