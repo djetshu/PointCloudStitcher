@@ -1,4 +1,6 @@
-# Geometric Transformer for Fast and Robust Point Cloud Registration
+# PointCloudStitcher
+
+## Geometric Transformer for Fast and Robust Point Cloud Registration
 
 PyTorch implementation of the paper:
 
