@@ -9,3 +9,11 @@ weights/*
 pretrained
 data/Kitti/downsampled
 data/ModelNet/*.pkl
+
+# PointClouds
+**.ply
+**.npy
+
+# Weights
+**.pth.tar
+**.pth
