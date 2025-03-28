@@ -1,5 +1,5 @@
 import argparse
-
+import os
 import torch
 import numpy as np
 torch.cuda.empty_cache()
@@ -15,7 +15,10 @@ from experiments.geotransformer_3dmatch.model import create_model
 
 def make_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--gt_file", required=False, help="ground-truth transformation file")
+    parser.add_argument("--data-path", required=True, help="path to the data folder")
+    parser.add_argument("--output-path", required=False, help="output path")
+    parser.add_argument("--show", action="store_true", help="show the pointclouds")
+    parser.add_argument("--gt-file", required=False, help="ground-truth transformation file")
     parser.add_argument("--weights", required=False, help="model weights file")
     return parser
 
@@ -35,7 +38,10 @@ def load_data(args):
 
     if args.gt_file is not None:
         transform = np.load(args.gt_file)
-        data_dict["transform"] = transform.astype(np.float32)
+    else:
+        transform = np.eye(4)  # 4x4 identity matrix
+
+    data_dict["transform"] = transform.astype(np.float32)
 
     return data_dict
 
@@ -52,11 +58,12 @@ def load_data_it(src_path, ref_path, args):
         "src_feats": src_feats.astype(np.float32),
     }
 
-    GT_PATH = './data/npy/exp/dummy_gt.npy'
+    if args.gt_file is not None:
+        transform = np.load(args.gt_file)
+    else:
+        transform = np.eye(4)  # 4x4 identity matrix
 
-    if GT_PATH is not None:
-        transform = np.load(GT_PATH)
-        data_dict["transform"] = transform.astype(np.float32)
+    data_dict["transform"] = transform.astype(np.float32)
 
     return data_dict
 
@@ -65,15 +72,13 @@ def main():
     args = parser.parse_args()
 
     cfg = make_cfg()
-    input_src = ['./data/npy/exp/rgb_points_20250303_134004.npy',
-                 './data/npy/exp/rgb_points_20250303_134039.npy',
-                 './data/npy/exp/rgb_points_20250303_134111.npy',
-                 './data/npy/exp/rgb_points_20250303_134146.npy',]
+
+    input_src = sorted([os.path.join(args.data_path, npy_file) for npy_file in os.listdir(args.data_path) if npy_file.endswith('.npy')])
     
-    ply_files = ['./data/ply/exp/rgb_points_20250303_134004.ply',
-                 './data/ply/exp/rgb_points_20250303_134039.ply',
-                 './data/ply/exp/rgb_points_20250303_134111.ply',
-                 './data/ply/exp/rgb_points_20250303_134146.ply',]
+    ply_files = ['./data/experiments/exp/ply/rgb_points_20250303_134004.ply',
+                 './data/experiments/exp/ply/rgb_points_20250303_134039.ply',
+                 './data/experiments/exp/ply/rgb_points_20250303_134111.ply',
+                 './data/experiments/exp/ply/rgb_points_20250303_134146.ply',]
     
     estimated_transform_list = []
     ref_points_list = []
@@ -116,7 +121,7 @@ def main():
             ref_points = output_dict["ref_points"]
             src_points = output_dict["src_points"]
             estimated_transform = output_dict["estimated_transform"]
-            transform = data_dict["transform"]
+            transform_gt = data_dict["transform"]
 
         estimated_transform_list.append(estimated_transform)
         ref_points_list.append(ref_points)
@@ -158,21 +163,6 @@ def main():
 
         stitched_rgb_pcd += ref_rgb_pcd
         stitched_rgb_pcd += src_rgb_pcd
-
-        # if i == 0:
-        #     src_rgb_pcd = o3d.io.read_point_cloud(ply_files[0])
-        #     ref_rgb_pcd = o3d.io.read_point_cloud(ply_files[1])
-
-        #     # Extract the transformation matrix
-        #     transform = estimated_transform_list[0].copy()
-
-        #     # Scale the translation (last column) by 1000
-        #     transform[:3, 3] *= 1000
-
-        #     #ref_rgb_pcd.transform(estimated_transform_list[i])
-        #     src_rgb_pcd.transform(transform)
-        #     stitched_rgb_pcd += ref_rgb_pcd
-        #     stitched_rgb_pcd += src_rgb_pcd
     
     draw_geometries(*point_clouds)
 
@@ -183,9 +173,10 @@ def main():
     o3d.io.write_point_cloud("./data/ply/exp/stitched.ply", stitched_pcd)
     print("Final stitched point cloud saved as 'stitched.ply'")
     
-    # compute error
-    rre, rte = compute_registration_error(transform, estimated_transform_list[0])
-    print(f"RRE(deg): {rre:.3f}, RTE(m): {rte:.3f}")
+    # Compute error
+    if args.gt_file is not None:
+        rre, rte = compute_registration_error(transform_gt, estimated_transform_list[0])
+        print(f"RRE(deg): {rre:.3f}, RTE(m): {rte:.3f}")
 
 
 if __name__ == "__main__":
