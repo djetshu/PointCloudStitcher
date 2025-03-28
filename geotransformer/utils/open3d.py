@@ -4,11 +4,23 @@ import matplotlib.colors as colors
 
 
 def get_color(color_name):
-    if color_name == "custom_yellow":
-        return np.asarray([255.0, 204.0, 102.0]) / 255.0
-    if color_name == "custom_blue":
-        return np.asarray([102.0, 153.0, 255.0]) / 255.0
-    assert color_name in colors.CSS4_COLORS
+    custom_colors = {
+        "custom_yellow": [255.0, 204.0, 102.0],  # Light yellow
+        "custom_blue": [102.0, 153.0, 255.0],  # Soft blue
+        "custom_red": [255.0, 99.0, 71.0],  # Tomato red
+        "custom_green": [34.0, 139.0, 34.0],  # Forest green
+        "custom_orange": [255.0, 140.0, 0.0],  # Dark orange
+        "custom_purple": [147.0, 112.0, 219.0],  # Medium purple
+        "custom_cyan": [0.0, 255.0, 255.0],  # Cyan
+        "custom_pink": [255.0, 105.0, 180.0],  # Hot pink
+        "custom_gray": [169.0, 169.0, 169.0],  # Dark gray
+        "custom_brown": [139.0, 69.0, 19.0],  # Saddle brown
+    }
+
+    if color_name in custom_colors:
+        return np.asarray(custom_colors[color_name]) / 255.0
+
+    assert color_name in colors.CSS4_COLORS, f"Unknown color: {color_name}"
     return np.asarray(colors.to_rgb(colors.CSS4_COLORS[color_name]))
 
 
