@@ -178,7 +178,8 @@ def main():
     o3d.visualization.draw_geometries([stitched_pcd])
     o3d.visualization.draw_geometries([stitched_rgb_pcd])
 
-    output_path = os.path.join(args.data_path, "ply", "stitched.ply")
+    output_path = os.path.join(args.data_path, "output", "stitched.ply")
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     o3d.io.write_point_cloud(output_path, stitched_pcd)
     print(f"Final stitched point cloud saved as 'stitched.ply' at {output_path}")
     
