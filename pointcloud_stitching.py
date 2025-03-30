@@ -64,11 +64,14 @@ def ply2npy(ply_file, downsample=True, change_units=True):
     # Convert to numpy arrays
     points = np.asarray(pcd.points)
     colors = np.asarray(pcd.colors)
+    flag_change_units = False
+    # Check if the points are in millimeters
     if change_units and np.mean(np.abs(points), axis=0).mean()> 1:
         # Convert from millimeters to meters
         points = points / 1000.0
+        flag_change_units = True
 
-    return points, colors
+    return points, colors, flag_change_units
 
 
 def main():
@@ -78,20 +81,22 @@ def main():
     cfg = make_cfg()
     ply_files = sorted([os.path.join(args.data_path, "ply", npy_file) for npy_file in os.listdir(os.path.join(args.data_path, "ply")) if npy_file.endswith('.ply')])
     
-    os.path.join(args.data_path, "ply")
     for ply_file in ply_files:
         # Convert PLY to NPY
-        points, colors = ply2npy(ply_file, downsample=True, change_units=True)
+        print(f"Converting {os.path.basename(ply_file)} to NPY...")
+        points, colors, flag_change_units = ply2npy(ply_file, downsample=True, change_units=True)
         npy_file = os.path.join(args.data_path, "npy", os.path.basename(ply_file).replace('.ply', '.npy'))
         os.makedirs(os.path.dirname(npy_file), exist_ok=True)
         # Save the points to NPY files
         np.save(npy_file, points)
+        print(f"Saved {npy_file} with {points.shape[0]} points.")
 
     input_src = sorted([os.path.join(args.data_path, "npy", npy_file) for npy_file in os.listdir(os.path.join(args.data_path, "npy"))  if npy_file.endswith('.npy')])
     
     estimated_transform_list = []
     ref_points_list = []
     src_points_list = []
+    pointcloud_list = []
     color_list = ["custom_yellow",
                   "custom_blue",
                   "custom_red",
@@ -103,7 +108,15 @@ def main():
                   "custom_gray",
                   "custom_brown",]
     
-    WEIGHTS_PATH = './weights/geotransformer-3dmatch.pth.tar'
+    if args.weights is not None:
+        weights = args.weights
+    else:
+        weights = './weights/geotransformer-3dmatch.pth.tar'
+
+    # prepare model
+    model = create_model(cfg).cuda()
+    state_dict = torch.load(weights)
+    model.load_state_dict(state_dict["model"])
 
     for i in range(len(input_src)-1):
         # prepare data
@@ -113,11 +126,9 @@ def main():
             [data_dict], cfg.backbone.num_stages, cfg.backbone.init_voxel_size, cfg.backbone.init_radius, neighbor_limits
         )
 
-        # prepare model
-        model = create_model(cfg).cuda()
-        state_dict = torch.load(WEIGHTS_PATH)
-        model.load_state_dict(state_dict["model"])
+        print(f"Processing as src_points: {os.path.basename(input_src[i])} and as ref_points: {os.path.basename(input_src[i+1])}...")
 
+        # prediction
         with torch.no_grad():
             model.eval()
             # prediction
@@ -132,48 +143,36 @@ def main():
             estimated_transform = output_dict["estimated_transform"]
             transform_gt = data_dict["transform"]
 
+        print(f"Done. Estimated transform: {estimated_transform}")
+
         estimated_transform_list.append(estimated_transform)
         ref_points_list.append(ref_points)
         src_points_list.append(src_points)
 
-    # visualization
-    point_clouds = []
+        # Store the point clouds into one list
+        if i == 0:
+            pointcloud_list.append(src_points)
+        pointcloud_list.append(ref_points)
     
     # Initialize an empty point cloud
     stitched_pcd = o3d.geometry.PointCloud()
     stitched_rgb_pcd = o3d.geometry.PointCloud()
 
-    for i, (ref_points, src_points) in enumerate(zip(ref_points_list, src_points_list)):
-        ref_pcd = make_open3d_point_cloud(ref_points)
-        ref_pcd.estimate_normals()
-        ref_pcd.paint_uniform_color(get_color(color_list[i + 1]))
-        ref_rgb_pcd = o3d.io.read_point_cloud(ply_files[i + 1])
-        for transform in estimated_transform_list[i+1:]:
-            ref_pcd.transform(transform)
-            transform_m = transform.copy()
-            transform_m[:3, 3] *= 1000
-            ref_rgb_pcd.transform(transform_m)
-        point_clouds.append(ref_pcd)
-        
-        src_pcd = make_open3d_point_cloud(src_points)
-        src_pcd.estimate_normals()
-        src_pcd.paint_uniform_color(get_color(color_list[i]))
-        src_rgb_pcd = o3d.io.read_point_cloud(ply_files[i])
+    print("Stitching point clouds...")
+    # Iterate through the point clouds and apply transformations
+    for i, pointcloud in enumerate(pointcloud_list):
+        point_pcd = make_open3d_point_cloud(pointcloud)
+        point_pcd.estimate_normals()
+        point_pcd.paint_uniform_color(get_color(color_list[i]))
+        point_rgb_pcd = o3d.io.read_point_cloud(ply_files[i])
         for transform in estimated_transform_list[i:]:
-            src_pcd.transform(transform)
-            transform_m = transform.copy()
-            transform_m[:3, 3] *= 1000
-            src_rgb_pcd.transform(transform_m)
-        point_clouds.append(src_pcd)
-
-        # Merge into the final stitched point cloud
-        stitched_pcd += ref_pcd
-        stitched_pcd += src_pcd
-
-        stitched_rgb_pcd += ref_rgb_pcd
-        stitched_rgb_pcd += src_rgb_pcd
-    
-    #draw_geometries(*point_clouds)
+            point_pcd.transform(transform)
+            transform_mm = transform.copy()
+            transform_mm[:3, 3] *= 1000
+            point_rgb_pcd.transform(transform_mm)
+        
+        stitched_pcd += point_pcd
+        stitched_rgb_pcd += point_rgb_pcd
 
     # Visualize the final stitched point cloud
     o3d.visualization.draw_geometries([stitched_pcd])
@@ -181,7 +180,7 @@ def main():
 
     output_path = os.path.join(args.data_path, "ply", "stitched.ply")
     o3d.io.write_point_cloud(output_path, stitched_pcd)
-    print("Final stitched point cloud saved as 'stitched.ply'")
+    print(f"Final stitched point cloud saved as 'stitched.ply' at {output_path}")
     
     # Compute error
     if args.gt_file is not None:
