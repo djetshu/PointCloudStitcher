@@ -48,21 +48,8 @@ After downloading, place the weights in the `weights/` directory.
 ## Quick Test
 ### Steps:
 1. Ensure `.ply` files are located in `./data/experiments/exp/ply`. If the `exp` or `ply` directories do not exist, create them.
-2. Run the following command:
 
-```bash
-python pointcloud_stitching.py --data-path data/experiments/exp
-```
-
-### Arguments:
-- `--data-path`: Path to the experiment directory (default: `data/experiments/exp`).
-- `--weights`: Path to the pre-trained model weights (default: `./weights/geotransformer-3dmatch.pth.tar`).
-- `--no-graph`: Disables graphical visualization of the stitching process.
-- `--output`: Directory for saving the final `.ply` file (default: `data/experiments/exp/output`).
-
-3. Once processing is complete, the final `.ply` file will be located in `data/experiments/exp/output`.
-
-## Data Organization
+### Data Organization
 The dataset should be structured as follows:
 ```text
 --data
@@ -76,6 +63,20 @@ The dataset should be structured as follows:
            |--npy (Created by the program)
            |--output (Created by the program)
 ```
+
+2. Run the following command:
+
+```bash
+python pointcloud_stitching.py --data-path data/experiments/exp
+```
+
+### Arguments:
+- `--data-path`: Path to the experiment directory (default: `data/experiments/exp`).
+- `--weights`: Path to the pre-trained model weights (default: `./weights/geotransformer-3dmatch.pth.tar`).
+- `--no-graph`: Disables graphical visualization of the stitching process.
+- `--output`: Directory for saving the final `.ply` file (default: `data/experiments/exp/output`).
+
+3. Once processing is complete, the final `.ply` file will be located in `data/experiments/exp/output`.
 
 ## Geometric Transformer for Fast and Robust Point Cloud Registration
 PointCloudStitcher is based on [GeoTransformer](https://github.com/qinzheng93/GeoTransformer), an implementation of the paper:
