@@ -1,6 +1,7 @@
 torch
 numpy
 scipy
+typeguard
 tqdm
 coloredlogs
 easydict
