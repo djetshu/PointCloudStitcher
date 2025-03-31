@@ -3,6 +3,11 @@
 ## Overview
 PointCloudStitcher is a tool designed to stitch multiple `.ply` files into a single `.ply` file. It utilizes a high-performance point cloud registration algorithm, optimized for partial overlaps of 10–30%.
 
+<p align="center">
+  <img src="assets/stitched_ply_colored.png" width="45%" />
+  <img src="assets/stitched_ply_rgb.png" width="45%" />
+</p>
+
 ## Requirements
 ### Data
 - `.ply` files must have at least 30% partial overlap. A higher overlap percentage generally results in a more accurately stitched final file.
