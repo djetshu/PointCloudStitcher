@@ -27,7 +27,7 @@ conda create -n pointcloud_stitcher python==3.8
 conda activate pointcloud_stitcher
 
 # Clone the repository
-git clone git@github.com:djetshu/PointCloudStitcher.git
+git clone https://github.com/djetshu/PointCloudStitcher.git # git@github.com:djetshu/PointCloudStitcher.git
 cd PointCloudStitcher
 
 # Install PyTorch (Ensure compatibility with CUDA 11.8)
