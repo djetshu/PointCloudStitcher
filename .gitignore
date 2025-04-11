@@ -4,6 +4,7 @@ build
 output
 *.egg-info
 *.so
+*.pyd
 **/__pycache__
 pretrained
 data/Kitti/downsampled
