@@ -12,3 +12,5 @@ einops
 ipdb
 tensorboard
 tensorboardX
+matplotlib
+ninja
