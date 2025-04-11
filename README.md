@@ -16,7 +16,7 @@ PointCloudStitcher is a tool designed to stitch multiple `.ply` files into a sin
 - It's recommended to lightly clean the point clouds—e.g., by removing outliers or distant points in CloudCompare—to improve alignment and results.
 
 ### Software
-- **CUDA**: Version 11.8 (Tested)
+- **CUDA**: Version 11.X (Tested in 11.8 and 11.7)
 - **cuDNN**: Version > 8.9 (Tested – Other versions may also work)
 
 ## Installation
@@ -85,7 +85,7 @@ PointCloudStitcher is based on [GeoTransformer](https://github.com/qinzheng93/Ge
 [Geometric Transformer for Fast and Robust Point Cloud Registration](https://arxiv.org/abs/2202.06688)
 
 ### Tested Environment:
-- **OS**: Ubuntu 22.04
+- **OS**: Windows 11 (Branch: main) and Ubuntu 22.04 (Branch: dev/pointcloud_stitching)
 - **Python**: 3.8
 - **PyTorch**: 1.7.1
 - **CUDA**: 11.8
