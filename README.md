@@ -13,6 +13,7 @@ PointCloudStitcher is a tool designed to stitch multiple `.ply` files into a sin
 - `.ply` files must have at least 30% partial overlap. A higher overlap percentage generally results in a more accurately stitched final file.
 - Files should be named in ascending or alphabetical order, ensuring that each file overlaps with the next one in sequence.
 - Files should be located in `./data/experiments/exp/ply`, relative to the repository directory.
+- It's recommended to lightly clean the point clouds—e.g., by removing outliers or distant points in CloudCompare—to improve alignment and results.
 
 ### Software
 - **CUDA**: Version 11.8 (Tested)
