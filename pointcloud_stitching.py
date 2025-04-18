@@ -175,11 +175,10 @@ def main():
         stitched_rgb_pcd += point_rgb_pcd
 
     # Visualize the final stitched point cloud
-    o3d.visualization.draw_geometries([stitched_pcd])
     print("Stitched colored point cloud visualization... Press 'Q' to exit.")
-    o3d.visualization.draw_geometries([stitched_rgb_pcd])
+    o3d.visualization.draw_geometries([stitched_pcd])
     print("Stitched RGB point cloud visualization... Press 'Q' to exit.")
-
+    o3d.visualization.draw_geometries([stitched_rgb_pcd])
 
     output_path = os.path.join(args.data_path, "output", "stitched.ply")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
