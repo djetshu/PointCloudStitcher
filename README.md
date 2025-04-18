@@ -24,7 +24,7 @@ Follow these steps to install the software:
 
 ```bash
 # Create a new virtual environment (recommended)
-conda create -n pointcloud_stitcher python==3.8
+conda create -n pointcloud_stitcher python==3.10
 conda activate pointcloud_stitcher
 
 # Clone the repository
