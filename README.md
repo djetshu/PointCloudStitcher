@@ -88,7 +88,7 @@ PointCloudStitcher is based on [GeoTransformer](https://github.com/qinzheng93/Ge
 ### Tested Environment:
 - **OS**: Windows 11 (Branch: main) and Ubuntu 22.04 (Branch: dev/pointcloud_stitching)
 - **Python**: 3.8
-- **PyTorch**: 1.7.1
+- **PyTorch**: 1.13.1
 - **CUDA**: 11.8
 - **cuDNN**: 8.9
 
