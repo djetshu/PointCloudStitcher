@@ -31,9 +31,8 @@ conda activate pointcloud_stitcher
 git clone https://github.com/djetshu/PointCloudStitcher.git # git@github.com:djetshu/PointCloudStitcher.git
 cd PointCloudStitcher
 
-# Install PyTorch 1.13 (Ensure compatibility with CUDA 11.8)
-pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
-
+# Install PyTorch 2.1 (Ensure compatibility with CUDA 11.8)
+pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu118
 
 # Install dependencies
 pip install -r requirements.txt
@@ -88,7 +87,7 @@ PointCloudStitcher is based on [GeoTransformer](https://github.com/qinzheng93/Ge
 ### Tested Environment:
 - **OS**: Windows 11 (Branch: main) and Ubuntu 22.04 (Branch: dev/pointcloud_stitching)
 - **Python**: 3.10
-- **PyTorch**: 1.13.1
+- **PyTorch**: 2.1.2
 - **CUDA**: 11.8
 - **cuDNN**: 8.9
 
