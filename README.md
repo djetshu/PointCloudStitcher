@@ -31,8 +31,9 @@ conda activate pointcloud_stitcher
 git clone https://github.com/djetshu/PointCloudStitcher.git # git@github.com:djetshu/PointCloudStitcher.git
 cd PointCloudStitcher
 
-# Install PyTorch (Ensure compatibility with CUDA 11.8)
-pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+# Install PyTorch 1.13 (Ensure compatibility with CUDA 11.8)
+pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
+
 
 # Install dependencies
 pip install -r requirements.txt
@@ -44,7 +45,7 @@ python setup.py build develop
 ## Pre-trained Weights
 Download the `geotransformer-3dmatch.pth.tar` weight file from the [release page](https://github.com/qinzheng93/GeoTransformer/releases).
 
-After downloading, place the weights in the `weights/` directory.
+After downloading, place the weights (`geotransformer-3dmatch.pth.tar`) in the `weights/` directory.
 
 ## Quick Test
 ### Steps:
