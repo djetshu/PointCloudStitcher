@@ -77,7 +77,7 @@ python pointcloud_stitching.py --data-path data/experiments/exp
 - `--no-graph`: Disables graphical visualization of the stitching process.
 - `--output`: Directory for saving the final `.ply` file (default: `data/experiments/exp/output`).
 
-3. Once processing is complete, the final `.ply` file will be located in `data/experiments/exp/output`.
+3. Once processing is complete, the final `.ply` files (stitched.ply and stitched_rgb.ply) will be located in `data/experiments/exp/output`.
 
 ## Geometric Transformer for Fast and Robust Point Cloud Registration
 PointCloudStitcher is based on [GeoTransformer](https://github.com/qinzheng93/GeoTransformer), an implementation of the paper:
