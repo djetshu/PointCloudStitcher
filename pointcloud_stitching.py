@@ -180,10 +180,15 @@ def main():
     print("Stitched RGB point cloud visualization... Press 'Q' to exit.")
     o3d.visualization.draw_geometries([stitched_rgb_pcd])
 
-    output_path = os.path.join(args.data_path, "output", "stitched.ply")
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    dir_output = os.path.join(args.data_path, "output")
+    os.makedirs(os.path.dirname(dir_output), exist_ok=True)
+    output_path = os.path.join(dir_output, "stitched.ply")
     o3d.io.write_point_cloud(output_path, stitched_pcd)
     print(f"Final stitched point cloud saved as 'stitched.ply' at {output_path}")
+    output_rgb_path = os.path.join(dir_output, "stitched_rgb.ply")
+    o3d.io.write_point_cloud(output_rgb_path, stitched_rgb_pcd)
+    print(f"Final stitched RGB point cloud saved as 'stitched_rgb.ply' at {output_rgb_path}")
+
     
     # Compute error
     if args.gt_file is not None:
